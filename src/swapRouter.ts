@@ -19,6 +19,13 @@ export type SwapRouterConfig = {
   deadline?: BigNumberish
 }
 
+export interface SwapParameters {
+  commands: string;
+  inputs: string[];
+  deadline?: BigNumber;
+  value: string;
+}
+
 type SupportedNFTTrade = NFTTrade<SupportedProtocolsData>
 
 export abstract class SwapRouter {
@@ -81,13 +88,13 @@ export abstract class SwapRouter {
 
         if (inputIsNative) {
           transactionValue = transactionValue.add(
-            BigNumber.from(uniswapTrade.trade.maximumAmountIn(swapOptions.slippageTolerance).quotient.toString())
+            BigNumber.from(uniswapTrade.trade.maximumAmountIn(swapOptions.slippageTolerance).quotient.toString()),
           )
         }
         // track amount of native currency in the router
         if (outputIsNative && swapOptions.recipient == ROUTER_AS_RECIPIENT) {
           currentNativeValueInRouter = currentNativeValueInRouter.add(
-            BigNumber.from(uniswapTrade.trade.minimumAmountOut(swapOptions.slippageTolerance).quotient.toString())
+            BigNumber.from(uniswapTrade.trade.minimumAmountOut(swapOptions.slippageTolerance).quotient.toString()),
           )
         }
         uniswapTrade.encode(planner, { allowRevert: false })
@@ -144,7 +151,7 @@ export abstract class SwapRouter {
    */
   public static swapERC20CallParameters(
     trades: RouterTrade<Currency, Currency, TradeType>,
-    options: SwapOptions
+    options: SwapOptions,
   ): MethodParameters {
     // TODO: use permit if signature included in swapOptions
     const planner = new RoutePlanner()
@@ -168,6 +175,49 @@ export abstract class SwapRouter {
     })
   }
 
+
+  public static swapPlannerParameters(
+    trades: RouterTrade<Currency, Currency, TradeType>,
+    options: SwapOptions,
+  ): SwapParameters {
+    // TODO: use permit if signature included in swapOptions
+    const planner = new RoutePlanner()
+
+    const trade: UniswapTrade = new UniswapTrade(trades, options)
+
+    const inputCurrency = trade.trade.inputAmount.currency
+    invariant(
+      !(inputCurrency.isNative && !!options.inputTokenPermit),
+      'NATIVE_INPUT_PERMIT',
+    )
+
+    // if (options.inputTokenPermit) {
+    //   encodePermit(planner, options.inputTokenPermit);
+    // }
+
+    const nativeCurrencyValue = inputCurrency.isNative
+      ? BigNumber.from(
+        trade.trade
+          .maximumAmountIn(options.slippageTolerance)
+          .quotient.toString(),
+      )
+      : BigNumber.from(0)
+
+    trade.encode(planner, { allowRevert: false })
+
+    const deadline = options.deadlineOrPreviousBlockhash
+      ? BigNumber.from(options.deadlineOrPreviousBlockhash)
+      : undefined
+
+    return {
+      commands: planner.commands,
+      inputs: planner.inputs,
+      deadline,
+      value: nativeCurrencyValue.toHexString(),
+    }
+  }
+
+
   /**
    * Encodes a planned route into a method name and parameters for the Router contract.
    * @param planner the planned route
@@ -177,7 +227,7 @@ export abstract class SwapRouter {
   private static encodePlan(
     planner: RoutePlanner,
     nativeCurrencyValue: BigNumber,
-    config: SwapRouterConfig = {}
+    config: SwapRouterConfig = {},
   ): MethodParameters {
     const { commands, inputs } = planner
     const functionSignature = !!config.deadline ? 'execute(bytes,bytes[],uint256)' : 'execute(bytes,bytes[])'
