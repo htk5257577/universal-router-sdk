@@ -23,7 +23,7 @@ export interface SwapParameters {
   commands: string;
   inputs: string[];
   deadline?: BigNumber;
-  value: string;
+  value: BigNumber;
 }
 
 type SupportedNFTTrade = NFTTrade<SupportedProtocolsData>
@@ -191,9 +191,9 @@ export abstract class SwapRouter {
       'NATIVE_INPUT_PERMIT',
     )
 
-    // if (options.inputTokenPermit) {
-    //   encodePermit(planner, options.inputTokenPermit);
-    // }
+    if (options.inputTokenPermit) {
+      encodePermit(planner, options.inputTokenPermit);
+    }
 
     const nativeCurrencyValue = inputCurrency.isNative
       ? BigNumber.from(
@@ -213,7 +213,7 @@ export abstract class SwapRouter {
       commands: planner.commands,
       inputs: planner.inputs,
       deadline,
-      value: nativeCurrencyValue.toHexString(),
+      value: nativeCurrencyValue,
     }
   }
 
