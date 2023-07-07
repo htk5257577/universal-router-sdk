@@ -1,5 +1,5 @@
 {
-  "name": "@uniswap/universal-router-sdk",
+  "name": "@htk/universal-router-sdk",
   "version": "1.5.3",
   "description": "sdk for integrating with the Universal Router contracts",
   "main": "dist/index.js",
@@ -25,7 +25,7 @@
     "prettier": "prettier --check '**/*.ts' && prettier --check '**/*.json'",
     "docs": "typedoc"
   },
-  "author": "@Uniswap",
+  "author": "htk",
   "prettier": {
     "printWidth": 120,
     "semi": false,
@@ -60,10 +60,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Uniswap/universal-router-sdk.git"
+    "url": "git+https://github.com/htk5257577/universal-router-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/Uniswap/universal-router-sdk/issues"
+    "url": "https://github.com/htk5257577/universal-router-sdk/issues"
   },
-  "homepage": "https://github.com/Uniswap/universal-router-sdk#readme"
+  "homepage": "https://github.com/htk5257577/universal-router-sdk#readme"
 }
